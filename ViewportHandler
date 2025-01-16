@@ -1,0 +1,97 @@
+-- object variables
+local dialogueGui = script.Parent
+
+local playerView = dialogueGui.SpeechContainer.PlayerView
+local customerView = dialogueGui.SpeechContainer.CustomerView
+local playerModel = playerView.WorldModel.You
+
+local dialogueEvent = dialogueGui.Events.DialogueEvent
+
+local tweenService = game:GetService("TweenService")
+local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+--Player gets bigger, customer smaller tweens
+local playerFocus = tweenService:Create(playerView, tweenInfo, {ImageColor3 = Color3.fromRGB(255, 255, 255), Size = UDim2.new(0, 508,0, 402)})
+local customerNotFocus = tweenService:Create(customerView, tweenInfo, {ImageColor3 = Color3.fromRGB(95, 95, 95), Size = UDim2.new(0, 466,0, 344)})
+
+--vice versa
+local customerFocus = tweenService:Create(customerView, tweenInfo, {ImageColor3 = Color3.fromRGB(255, 255, 255), Size = UDim2.new(0, 508,0, 402)})
+local playerNotFocus = tweenService:Create(playerView, tweenInfo, {ImageColor3 = Color3.fromRGB(95,95,95), Size = UDim2.new(0, 466,0, 344)})
+
+local playerIdle = playerModel.Animation.Idle
+local playerIdleTrack = playerModel.Humanoid.Animator:LoadAnimation(playerIdle)
+
+local playerTalk = playerModel.Animation.Talk
+local playerTalkTrack = playerModel.Humanoid.Animator:LoadAnimation(playerTalk)
+
+-- pre-initialize the variables because the customer isn't going to be the same
+local customerModel = nil
+local customerIdle = nil
+local customerTalk = nil
+local customerIdleTrack= nil
+local customerTalkTrack= nil
+
+dialogueEvent.OnClientEvent:Connect(function(speaker, action)
+	if speaker ~= "You" then
+		-- if speaker is not the user then it is the customer
+		playerFocus:Cancel()
+		customerNotFocus:Cancel()
+
+		playerNotFocus:Play()
+		customerFocus:Play()
+		
+		customerModel = customerView.WorldModel:WaitForChild(speaker)
+
+		if customerModel and customerIdleTrack == nil then
+			customerTalk = customerModel.Animation.Talk
+			customerTalkTrack = customerModel.Humanoid:WaitForChild("Animator"):LoadAnimation(customerTalk)
+			customerIdle = customerModel.Animation.Idle
+			customerIdleTrack = customerModel.Humanoid:WaitForChild("Animator"):LoadAnimation(customerIdle)
+			
+		end
+		
+		customerTalkTrack:Play()
+		customerIdleTrack:Stop()
+		
+		--if the removeevent calls for an action, plays the characters important questions
+		if action == "action" then
+			local customerAction = customerModel.Animation.Action
+			local customerActionTrack = customerModel.Humanoid:WaitForChild("Animator"):LoadAnimation(customerAction)
+			customerActionTrack:Play()
+		end
+		
+		playerTalkTrack:Stop()
+		playerIdleTrack:Play()
+	else
+
+		playerNotFocus:Cancel()
+		customerFocus:Cancel()
+
+		if customerModel then
+			customerIdleTrack:Play()
+			customerTalkTrack:Stop()
+		end
+
+
+		playerFocus:Play()
+		customerNotFocus:Play()
+
+		playerIdleTrack:Stop()
+		playerTalkTrack:Play()
+
+	end
+end)
+
+dialogueGui.ConfirmationContainer.Frame.Stop.MouseButton1Click:Connect(function()
+	customerTalk = nil
+	customerTalkTrack = nil
+	customerIdle = nil
+	customerIdleTrack = nil
+end)
+
+dialogueGui.Events.Stop.OnClientEvent:Connect(function()
+	customerTalk = nil
+	customerTalkTrack = nil
+	customerIdle = nil
+	customerIdleTrack = nil
+end)
