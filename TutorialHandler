@@ -1,0 +1,112 @@
+-- Object variable references
+local dialogueGui = script.Parent.Parent
+local tutorialEvent =  script.Parent.StartTutorial
+local stopEvent =  dialogueGui.Events.Stop
+
+local focus = script.Parent.Focus
+local tutorialText = script.Parent.TutorialText
+local UIS = game:GetService("UserInputService")
+local nextEvent = script.Parent.Next
+-- variables
+local textIndex = 1
+local tutorialDone = false
+
+local tutorial = {
+	"Welcome to DINER 51, this a tutorial, click to continue",
+	"This is your avatar",
+	"Your job is to interact with people",
+	"Make sure to keep their annoyance bar from raising",
+	"Select a choice below, they will show up when prompted",
+	"Good choice, their annoyance bar stayed the same",
+	"Click on this arrow to continue dialogue",
+	"Click on stop when you wish to quit",
+	"Click on continue, have fun!"
+}
+
+local tutorialFocus = {
+	{Position = UDim2.new(-0.722, 0,-0.68, 0), ImageTransparency = 0.38},
+	{Position = UDim2.new(-0.951, 0,-0.737, 0)},
+	{Position = UDim2.new(-0.951, 0,-0.737, 0)},
+	{Position = UDim2.new(-1.151, 0,-0.381, 0)},
+	{ImageTransparency = 1},
+	{ImageTransparency = 1},
+	{Position = UDim2.new(-0.383, 0,-0.184, 0), ImageTransparency = 0.38},
+	{Position = UDim2.new(-0.287, 0,-0.159, 0)},
+	{ImageTransparency = 1},
+
+
+}
+
+--set up tweens
+local tweenService = game:GetService("TweenService")
+local tweenInfo = TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local targetPosText = UDim2.new(0.148, 0,0.068, 0)
+local focusTween = tweenService:Create(focus, tweenInfo, tutorialFocus[1])
+
+local textTween = tweenService:Create(tutorialText, tweenInfo, {Position = targetPosText})
+
+local function tweenText()
+	textTween:Cancel()
+	tutorialText.Position = UDim2.new(0.148, 0,0.053, 0)
+	textTween:Play()
+end
+
+local function tweenFocus()
+	focusTween = tweenService:Create(focus, tweenInfo, tutorialFocus[textIndex])	
+	focusTween:Play()
+end
+
+tutorialEvent.OnServerEvent:Connect(function(player)
+	if tutorialDone == false then
+		focus.Visible = true
+		tutorialText.Visible = true
+		dialogueGui.Stop.Interactable = false
+
+		script.Parent.ClickHandler.Enabled = true
+		tweenText()
+		tutorialText.Text = tutorial[1]
+		tweenFocus()
+		dialogueGui.SpeechContainer.Interactable = false
+	end
+end)
+
+nextEvent.OnServerEvent:Connect(function(player, msg)
+	if tutorialDone then return end
+	textIndex+=1
+
+	if textIndex > #tutorial then
+		tutorialText.Visible = false
+		script.Parent.ClickHandler.Enabled = false
+		tutorialDone = true
+	else
+		
+		tweenText()
+		tweenFocus()
+		tutorialText.Text = tutorial[textIndex]
+	
+		if textIndex == 5 then
+			script.Parent.ClickHandler.Enabled = false
+			dialogueGui.Stop.Interactable = true
+			dialogueGui.SpeechContainer.Interactable = true
+		elseif textIndex == 6 then
+			dialogueGui.SpeechContainer.Interactable = false
+
+		elseif textIndex == 7 then
+			dialogueGui.SpeechContainer.Interactable = true
+		end
+	
+		if msg == "ChoicePicked" then
+			script.Parent.ClickHandler.Enabled = true
+		end
+	
+	end
+	
+end)
+
+stopEvent.OnServerEvent:Connect(function()
+	textIndex = 1
+	tutorialText.Visible = false
+	focus.Transparency = 1
+	focus.Visible = false
+	focus.Position = UDim2.new(0, 0,-0.48, 0)
+end)
