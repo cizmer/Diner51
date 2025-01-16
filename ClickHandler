@@ -1,0 +1,8 @@
+local uis = game:GetService("UserInputService")
+
+uis.InputEnded:Connect(function(input, gpe)
+	--mouse click
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		script.Parent.Next:FireServer("next")
+	end
+end)
