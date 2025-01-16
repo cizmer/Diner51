@@ -1,0 +1,41 @@
+local dialogueGui = script.Parent
+local confirmContainer = dialogueGui.ConfirmationContainer
+
+dialogueGui.Stop.MouseButton1Click:Connect(function()
+	dialogueGui.SFX.Annoyed:Play()
+	confirmContainer.Visible = true
+	dialogueGui.SpeechContainer.Interactable = false
+	confirmContainer.Interactable = true
+	dialogueGui.Stop.Interactable = false
+
+end)
+
+local function removeSpace(str)
+	--substitute space for nothing
+	return str:gsub(" ", "")
+end
+
+confirmContainer.Frame.Stop.MouseButton1Click:Connect(function()
+	local userInput = confirmContainer.Frame.TextConfirm.Text
+	
+	if removeSpace(string.lower(userInput)) == "stop" then
+		dialogueGui.SFX.Annoyed:Play()
+		dialogueGui.SpeechContainer.Visible = false
+		dialogueGui.Stop.Visible = false
+		confirmContainer.Visible = false
+		dialogueGui.Events.Stop:FireServer()
+		game.Players.LocalPlayer.PlayerGui.MenuGui.Enabled = true	
+		confirmContainer.Frame.TextConfirm.Text = "Type 'Stop' to confirm"
+	end
+end)
+
+confirmContainer.Frame.Continue.MouseButton1Click:Connect(function()
+	dialogueGui.SFX.GoodChoice:Play()
+	dialogueGui.SpeechContainer.Interactable = true
+	dialogueGui.Stop.Interactable = true
+	confirmContainer.Visible = false
+	confirmContainer.Frame.TextConfirm.Text = "Type 'Stop' to confirm"
+
+end)
+
+
