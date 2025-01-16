@@ -1,0 +1,34 @@
+local player = game.Players.LocalPlayer
+local currentCamera = workspace.CurrentCamera
+local mouse = player:GetMouse()
+local TweenService = game:GetService("TweenService")
+local cameraPart = workspace:WaitForChild("MainCamera")
+local maxTilt = 4
+
+currentCamera.CameraType = Enum.CameraType.Scriptable
+currentCamera.CFrame = cameraPart.CFrame
+
+
+local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local targetCFrame = cameraPart.CFrame * CFrame.Angles(
+	math.rad((((mouse.Y - mouse.ViewSizeY / 2) / mouse.ViewSizeY)) * -maxTilt),
+	math.rad((((mouse.X - mouse.ViewSizeX / 2) / mouse.ViewSizeX)) * -maxTilt),
+	0
+)
+local tween = TweenService:Create(currentCamera, tweenInfo, {CFrame = targetCFrame})
+
+local function updateCamera()
+	local targetCFrame = cameraPart.CFrame * CFrame.Angles(
+		math.rad((((mouse.Y - mouse.ViewSizeY / 2) / mouse.ViewSizeY)) * -maxTilt),
+		math.rad((((mouse.X - mouse.ViewSizeX / 2) / mouse.ViewSizeX)) * -maxTilt),
+		0
+	)
+
+	tween = TweenService:Create(currentCamera, tweenInfo, {CFrame = targetCFrame})
+	tween:Play()
+end
+
+local conn = game:GetService("RunService").RenderStepped:Connect(function()
+	updateCamera()
+end)
+
