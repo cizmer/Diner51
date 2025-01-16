@@ -1,0 +1,24 @@
+--object Variables
+local player = game.Players.LocalPlayer
+local menuGui = script.Parent
+local dialogueGui = player.PlayerGui.DialogueGui
+--get Tween API and make tweens
+local tweenService = game:GetService("TweenService")
+local speechContainerTween = tweenService:Create(dialogueGui.SpeechContainer, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.075, 0,0.68, 0)})
+
+dialogueGui.Enabled = false
+dialogueGui.SpeechContainer.Position = UDim2.new(0.075, 0,1.5, 0)
+
+menuGui.PlayButton.MouseButton1Click:Connect(function()
+	dialogueGui.SpeechContainer.Position = UDim2.new(0.075, 0,1.5, 0)
+	speechContainerTween:Cancel()
+	dialogueGui.TutorialDialogueHandler.Enabled = true
+	
+	menuGui.Enabled = false
+	dialogueGui.Enabled = true
+	speechContainerTween:Play()
+	dialogueGui.SpeechContainer.Visible = true
+	dialogueGui.Stop.Visible = true
+	dialogueGui.SpeechContainer.Interactable = true
+	dialogueGui.Stop.Interactable = true
+end)
