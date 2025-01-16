@@ -1,0 +1,154 @@
+--Object Variables
+local infoGui = script.Parent.Parent
+local infoButton = infoGui.infoButton
+local infoContainer = infoGui.infoContainer
+local nextBtn = infoContainer.Next
+local previousBtn = infoContainer.Previous
+
+-- Services
+local tweenService = game:GetService("TweenService")
+local tweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+local targetPosition = UDim2.new(0.17, 0,0.166, 0)
+local containerTween = tweenService:Create(infoContainer,tweenInfo, {Position = targetPosition, Transparency = 0})
+
+--Variables
+local index = 1
+
+local infoDialogueBox = {
+	{
+		title = "Dialogue",
+		text = "The dialogue is shown in the dialogue box, along with the name of the character speaking it. You can press space to make the dialogue finish instantly",
+		image = "rbxassetid://115856858935021"
+	},
+	{
+		title = "Avatars",
+		text = "Models/animations that show which character is talking, which will be bigger.",
+		image = "rbxassetid://102680229043258"
+	},
+	{
+		title = "Next Button",
+		text = "When the current dialogue is done, the next button will appear when no choices are prompted to continue.",
+		image = "rbxassetid://100110796386774"
+	},
+	{
+		title = "Choices",
+		text = "Certain dialogues will prompt choices (instead of the next button) for the user to change the story. The dialogue only continues when the choice is picked.",
+		image = "rbxassetid://87563476113311"
+	},
+	{
+		title = "Annoyance Bar",
+		text = "Certain choices the user makes will annoy the character they are talking to. If raised to the max, the game will end.",
+		image = "rbxassetid://111271433967183"
+
+	},
+	{
+		title = "Stop",
+		text = "The stop button is always present to end the game whenever the user wants. Type 'stop' in the confirmation box to stop. This resets progress.",
+		image = "rbxassetid://136356147056692"
+	},
+	{
+		title = "Notebook",
+		text = "In the game, a customer will hand you a note, it will appear on the corner of the screen when you have access to it. Click on it to read its contents. It stays for the rest of your session",
+		image = "rbxassetid://117592754207834"
+	},
+}
+
+local infoObjective = {
+	{
+		title = "Interact",
+		text = "Interact with various customers throughout the various days",
+		image = "rbxassetid://102680229043258"
+
+	},
+	{
+		title = "Appease",
+		text = "Refrain from annoying customers, if their annoyance bars reaches to the top, then the customer will leave",
+		image = "rbxassetid://102680229043258"
+	},
+}
+
+local currentShowing = infoDialogueBox
+local maxIndex = #infoDialogueBox
+--Show the info box
+local function tweenContainer()
+	containerTween:Cancel()
+	infoContainer.Transparency = 0.1
+	infoContainer.Position = UDim2.new(0.17, 0,0.19, 0)
+	containerTween:Play()
+end
+
+infoButton.MouseButton1Click:Connect(function()
+	if infoContainer.Visible == true then
+		infoContainer.Visible = false
+	else
+		infoContainer.Visible = true
+		tweenContainer()
+	
+	end	
+end)
+
+infoContainer.Clear.MouseButton1Click:Connect(function()
+	infoContainer.Visible = false
+end)
+
+-- make the buttons disappear when no further text afterwards or before the current the index
+local function checkIndex()
+	if index == 1 then
+		previousBtn.Visible = false
+	else
+		previousBtn.Visible = true
+
+	end
+	
+	if index < maxIndex then
+		nextBtn.Visible = true
+	else
+		nextBtn.Visible = false
+	end
+end
+
+local function changeInfo(changeIndex)
+	index+=changeIndex
+	tweenContainer()		
+	infoContainer.Title.Text = currentShowing[index].title
+	infoContainer.InfoText.Text = currentShowing[index].text
+	infoContainer.ObjectImage.Image = currentShowing[index].image
+end
+
+infoContainer.Objective.MouseButton1Click:Connect(function()
+	currentShowing = infoObjective
+	maxIndex = #infoObjective
+	index = 1
+	changeInfo(0)
+	checkIndex()
+end)
+
+infoContainer.DialogueBox.MouseButton1Click:Connect(function()
+	currentShowing = infoDialogueBox
+	maxIndex = #infoDialogueBox
+	index = 1
+	changeInfo(0)
+	checkIndex()
+end)
+
+nextBtn.MouseButton1Click:Connect(function()
+	if index < maxIndex then
+		changeInfo(1)
+	end
+	
+	checkIndex()
+end)
+
+previousBtn.MouseButton1Click:Connect(function()
+	if index > 1 then
+		changeInfo(-1)
+	end
+	checkIndex()
+
+end)
+
+checkIndex()
+infoContainer.Title.Text = currentShowing[index].title
+infoContainer.InfoText.Text = currentShowing[index].text
+infoContainer.ObjectImage.Image = currentShowing[index].image
