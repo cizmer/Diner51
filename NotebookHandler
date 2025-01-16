@@ -1,0 +1,41 @@
+local notebook = script.Parent
+local tweenService = game:GetService("TweenService")
+local tweenInfo = TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local hoverEnter = tweenService:Create(notebook, tweenInfo, {Position = UDim2.new(-0.32, 0,-0.64, 0), Rotation = -10})
+local hoverLeave = tweenService:Create(notebook, tweenInfo, {Position = UDim2.new(-0.346, 0,-0.676, 0), Rotation = -10})
+local openNotebook = tweenService:Create(notebook, tweenInfo, {Position = UDim2.new(0.277, 0,0.071, 0), Rotation = 0})
+
+local closedNotebook = true
+
+notebook.MouseEnter:Connect(function()
+	if closedNotebook then
+		print("yea")
+		hoverLeave:Pause()
+		hoverEnter:Play()
+	end
+end)
+
+notebook.MouseLeave:Connect(function()
+	if closedNotebook then
+		print("mea")
+		hoverEnter:Pause()
+		hoverLeave:Play()
+	end
+end)
+
+notebook.MouseButton1Click:Connect(function()
+	closedNotebook = false
+	hoverEnter:Pause()
+	hoverLeave:Pause()
+
+	openNotebook:Play()
+	notebook.Close.Visible = true
+end)
+
+notebook.Close.MouseButton1Click:Connect(function()
+	notebook.Close.Visible = false
+	hoverLeave:Play()
+	wait(0.7)
+	closedNotebook = true
+end)
+
