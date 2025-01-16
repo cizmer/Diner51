@@ -1,0 +1,44 @@
+local dialogueGui = script.Parent
+
+local dialogueEvent = dialogueGui.Events.DialogueEvent
+local choicePickedEvent = dialogueGui.Events.ChoicePicked
+local stopEvent = dialogueGui.Events.Stop
+
+local annoyedImage = dialogueGui.Annoyed
+local goodChoiceImage = dialogueGui.GoodChoice
+
+local annoyedSound = dialogueGui.SFX.Annoyed
+local goodChoiceSound = dialogueGui.SFX.GoodChoice
+
+-- getting the roblox tweening API
+local tweenService = game:GetService("TweenService")
+local tweenInfoImages = TweenInfo.new(2.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+-- adding visual effects/ fade out to the images
+local annoyedTween = tweenService:Create(annoyedImage, tweenInfoImages, {ImageTransparency = 1})
+local goodChoiceTween = tweenService:Create(goodChoiceImage, tweenInfoImages, {ImageTransparency = 1})
+
+-- Move to client side because server can't interact with objects like client can
+dialogueEvent.OnServerEvent:Connect(function(player, speaker, action)
+	dialogueEvent:FireClient(player, speaker, action)
+	if action ~= "none" then
+		print(action)
+	end
+	
+end)
+
+choicePickedEvent.OnServerEvent:Connect(function(player, annoyance)
+	if annoyance > 0 then
+		annoyedImage.ImageTransparency = 0
+		annoyedTween:Play()
+		annoyedSound:Play()
+	else
+		goodChoiceImage.ImageTransparency = 0
+		goodChoiceTween:Play()
+		goodChoiceSound:Play()
+	end
+end)
+
+stopEvent.OnServerEvent:Connect(function(player)
+	stopEvent:FireClient(player)
+end)
