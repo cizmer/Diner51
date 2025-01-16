@@ -1,0 +1,778 @@
+--VARIABLES
+local dialogueIndex = 1
+local scenarioIndex = 1
+local currentScenarioDialogue = {}
+
+--existing objects in the GUI as variables
+local speechContainer = script.Parent.SpeechContainer
+local choiceContainer = speechContainer.ChoiceContainer
+local nextButton = speechContainer.NextButton
+local annoyance = speechContainer.AnnoyanceContainer.Current
+local debounce = true
+local dialogueEvent = script.Parent.Events.DialogueEvent
+local choicePickedEvent = script.Parent.Events.ChoicePicked
+local hasNoteBook = false
+-- user input service 
+local userInputService = game:GetService("UserInputService")
+
+-- tween to move out of frame at the end
+local tweenService = game:GetService("TweenService")
+local speechContainerTween = tweenService:Create(speechContainer, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.075, 0,1.85, 0)})
+
+local tweenNotebookIntro = tweenService:Create(script.Parent.Notebook, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(-0.346, 0,-0.676, 0)})
+--Berkley's dialogue
+--[[ KEY
+	index: is the current scenario that the user is on, different choices leads to different indexes
+	hasChoice: shows if the current dialogue sequence has choices the user can pick, if so, populate the choice list
+	text: text that will be displayed in the dialogue
+	speaker: shows the name of the person speaking
+	givenotebook: berkley specific action, indicates when notebook is given
+]]
+local berkleyDialogue = {  
+	{ 
+		index = 1,
+		hasChoice = true,
+		text = "Howdy there, kiddo. You must be Wilkins' kid correct? You look just like him. ",
+		speaker = "Berkley"
+		
+	},	
+	{ 
+		index = 2,
+		hasChoice = false,
+		text = "I'm sorry but do I know you?",
+		speaker = "You"
+
+	},
+	{ 
+		index = 3,
+		hasChoice = false,
+		text = "Correct, however who are you?",
+		speaker = "You"
+
+	},
+	{ 
+		index = 4,
+		hasChoice = false,
+		text = "The name’s Officer Berkley. Your pops sent me your way-",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 4,
+		hasChoice = false,
+		text = "said you were settin’ up a new diner right here in town. Asked me to stop by.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 4,
+		hasChoice = false,
+		text = "Took me a bit but finally found it.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 4,
+		hasChoice = true,
+		text = "So, kiddo, how’ve you been doin’? Hope this ol’ town’s been treatin’ you right.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 5,
+		hasChoice = false,
+		text = "Doing just fine sir.",
+		speaker = "You"
+
+	},
+	{ 
+		index = 6,
+		hasChoice = false,
+		text = "How do you know my dad?",
+		speaker = "You"
+
+	},
+	{ 
+		index = 6,
+		hasChoice = false,
+		text = "Me and your pops go way back, y’know. Worked with him at the station before he got relocated over to the base nearby.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 7,
+		hasChoice = false,
+		text = "It hasn't been great.",
+		speaker = "You"
+
+	},
+	{ 
+		index = 7,
+		hasChoice = true,
+		text = "That’s tough, kiddo. Just so you know, if you ever need anything just let me know.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 16,
+		hasChoice = false,
+		text = "Thank you, I appericate it.",
+		speaker = "You"
+
+	},
+	{ 
+		index = 16,
+		hasChoice = false,
+		text = "No problem kiddo.",
+		speaker = "You"
+
+	},
+	{ 
+		index = 8,
+		hasChoice = false,
+		text = "Thats good to know, kiddo..",
+		speaker = "Berkley",
+
+	},
+	{ 
+		index = 8,
+		hasChoice = false,
+		text = "Well I'll cut to the chase, your father asked me to bring you this",
+		speaker = "Berkley",
+		giveNotebook = true
+
+	},
+	{ 
+		index = 8,
+		hasChoice = false,
+		text = "Now I aint' quite sure how much you know how things are around here but-",
+		speaker = "Berkley",
+	
+
+	},
+	{ 
+		index = 8,
+		hasChoice = true,
+		text = "Seein with how.. 'distressed' he was to get this to you it aint a bad guess to assume you probably aint gotta clue",
+		speaker = "Berkley",
+
+
+	},
+	{ 
+		index = 9,
+		hasChoice = false,
+		text = "Like I'd go to you with my problems.",
+		speaker = "You"
+
+	},
+	{ 
+		index = 9,
+		hasChoice = false,
+		text = "Well, excuse me for tryin’ spitfire.",
+		speaker = "Berkley"
+
+	}, 
+	{ 
+		index = 9,
+		hasChoice = false,
+		text = "Your pops asked me to check in, not to get my head bit off.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 9,
+		hasChoice = true,
+		text = "Guess he forgot to mention you came with a warnin label.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 14,
+		hasChoice = false,
+		text = "Ya ya, whatever, get to the point.",
+		speaker = "You"
+
+	},
+	{ 
+		index = 15,
+		hasChoice = false,
+		text = "...",
+		speaker = "You"
+
+	},
+	{ 
+		index = 10,
+		hasChoice = false,
+		text = "...",
+		speaker = "Berkley",
+
+
+	},
+	{ 
+		index = 10,
+		hasChoice = true,
+		text = "Your father asked me to bring this to you..",
+		speaker = "Berkley",
+		giveNotebook = true
+
+
+	},
+	{
+		index = 18, 
+		hasChoice = false,
+		text = "Whats in the notebook?",
+		speaker = "You",
+	},
+	{
+		index = 18, 
+		hasChoice = false,
+		text = "Kid.. what do you take me for? I ain't one to open other peoples stuff. How about you read it yourself and figure it out.",
+		speaker = "Berkley",
+	},
+	{
+		index = 18, 
+		hasChoice = false,
+		text = "Oh.. Right",
+		speaker = "You",
+	},
+	{
+		index = 18, 
+		hasChoice = true,
+		text = "*Sigh* Well kiddo, I have to head out back on patrol, I'll see if I can stop by in the future.",
+		speaker = "Berkley",
+	},
+	{ 
+		index = 12,
+		hasChoice = false,
+		text = "Thank you.",
+		speaker = "You"
+
+	},
+	{ 
+		index = 13,
+		hasChoice = false,
+		text = "Does it look like I care?",
+		speaker = "You"
+
+	},
+	{ 
+		index = 11,
+		hasChoice = false,
+		text = "What do you mean?",
+		speaker = "You"
+
+	},
+	{ 
+		index = 11,
+		hasChoice = false,
+		text = "Well kiddo, it's something that can't really be explained in the next few minutes I have here untill I have to return back to duty.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 11,
+		hasChoice = false,
+		text = "When will you be able to tell me?",
+		speaker = "You"
+
+	},
+	{ 
+		index = 11,
+		hasChoice = true,
+		text = "I'll stop by soon in the future and if I have more time I'll explain whats going on here. Till then stay safe kiddo.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 20,
+		hasChoice = false,
+		text = "You've been awfully disrepectful kid, if you don't want to talk, so be it.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 20,
+		hasChoice = false,
+		text = "I ain't got time to talk to an entitled brat, I'm leavin'",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 21,
+		hasChoice = false,
+		text = "Thank you sir.",
+		speaker = "You"
+
+	},
+	{ 
+		index = 21,
+		hasChoice = false,
+		text = "No problem kid, I got to get back to duty now, let me know if you need anything.",
+		speaker = "Berkley"
+
+	},
+	{ 
+		index = 23,
+		hasChoice = false,
+		text = "Take care",
+		speaker = "You"
+
+	},
+	{ 
+		index = 24,
+		hasChoice = false,
+		text = "Thank you sir.",
+		speaker = "You"
+
+	},
+	{ 
+		index = 25,
+		hasChoice = false,
+		text = "Now, I aint' quite sure how much you know how things are around here but-",
+		speaker = "Berkley",
+
+
+	},
+	{ 
+		index = 25,
+		hasChoice = true,
+		text = "I'd assume from your colorful attitude you ain't got a clue.",
+		speaker = "Berkley",
+
+
+	},
+	{ 
+		index = 26,
+		hasChoice = false,
+		text = "What do you mean?",
+		speaker = "You",
+	},
+	{ 
+		index = 26,
+		hasChoice = false,
+		text = "Can't answer that kid. I have to get back to duty, need to get back asap, everyone is on high alert, if you could even call it that.",
+		speaker = "Berkley",
+
+
+	},
+	{ 
+		index = 26,
+		hasChoice = false,
+		text = "Now I've gone ahead and finished my job here, now you go do yours. I'm headin out.",
+		speaker = "Berkley",
+
+
+	},
+	{
+			index = 25,
+			hasChoice = true,
+			text = "I'd assume from your colorful attitude you ain't got a clue.",
+			speaker = "Berkley",
+	},
+
+	{ 
+		index = 27,
+		hasChoice = false,
+		text = "Who do you think I am?! Do you really think I'd stoop so low to snoop through other peoples stuff?! I don't have enough time to play your games.",
+		speaker = "Berkley",
+
+
+	},
+	{ 
+		index = 27,
+		hasChoice = false,
+		text = "Why don't ya take a real hard look at it first, before asking questions you know I don't know.I've done my job here, now you go do yours. I'm headin out.",
+		speaker = "Berkley",
+
+
+	},
+	{ 
+		index = 28,
+		hasChoice = false,
+		text = "You too?.",
+		speaker = "You",
+
+
+	},
+
+	
+}
+
+--choices that will be populated if hasChoice is true
+--[[ KEY
+	index: is the current scenario that the user is on, used to match with the dialogue
+	changeIndex: what index the scenarioIndex will be changed to, changes the dialogue index
+	annoyanceChange: number that will be added to the customer's annoyance, reaching the max will have them leave
+	text: text that will show in the choice button
+]]
+
+local berkleyChoices = {
+	{
+		index = 1,
+		changeIndex = 3,
+		annoyanceChange = 0,
+		text = "Correct, but who are you?",
+	},
+	{
+		index = 1,
+		changeIndex = 2,
+		annoyanceChange = 0,
+		text = "I'm sorry but do I know you?",
+	},
+	{
+		index = 4,
+		changeIndex = 5,
+		annoyanceChange = 0,
+		text = "Doing just fine.",
+	},
+	
+	{
+		index = 4,
+		changeIndex = 6,
+		annoyanceChange = 0,
+		text = "How do you know my dad?",
+	},
+	{
+		index = 4,
+		changeIndex = 7,
+		annoyanceChange = 0,
+		text = "Not well.",
+	},
+	
+	{
+		index = 7,
+		changeIndex = 16,
+		annoyanceChange = 0,
+		text = "Thank you",
+	},
+	{
+		index = 7,
+		changeIndex = 9,
+		annoyanceChange = 3,
+		text = "*Distrust*",
+	},
+	{
+		index = 8,
+		changeIndex = 11,
+		annoyanceChange = 0,
+		text = "What do you mean?",
+	},
+	{
+		index = 8,
+		changeIndex = 18,
+		annoyanceChange = 2,
+		text = "What's in the notebook?",
+	},
+	{
+		index = 8,
+		changeIndex = 21,
+		annoyanceChange = 0,
+		text = "Thank you",
+	},
+	{
+		index = 9,
+		changeIndex = 15,
+		annoyanceChange = 0,
+		text = "Stay silent*",
+	},
+	{
+		index = 9,
+		changeIndex = 14,
+		annoyanceChange = 3,
+		text = "Annoyed*",
+	},
+
+	{
+		index = 10,
+		changeIndex = 12, 
+		annoyanceChange = 0,
+		text = "Thank you.",
+	},
+	{
+		index = 10,
+		changeIndex = 13,
+		annoyanceChange = 4,
+		text = "Dismissive*",
+	},
+	
+	{
+		index = 11,
+		changeIndex = 23, 
+		annoyanceChange = 0,
+		text = "Take care.",
+	},
+	{
+		index = 11,
+		changeIndex = 28,
+		annoyanceChange = 0,
+		text = "Awkward*",
+	},
+	{
+		index = 18,
+		changeIndex = 23,
+		annoyanceChange = 0,
+		text = "Take care",
+	},
+	{
+		index = 18,
+		changeIndex = 24,
+		annoyanceChange = 0,
+		text = "Thank you.",
+	},
+	{
+		index = 25,
+		changeIndex = 27,
+		annoyanceChange = 2,
+		text = "What's in the notebook?",
+	},
+	{
+		index = 25,
+		changeIndex = 26,
+		annoyanceChange = 0,
+		text = "What do you mean",
+	},
+
+}
+
+--Transition between indexes after the current list is done
+local transitionMap = {
+	[2] = 4,
+	[5] = 8,
+	[3] = 4,
+	[6] = 8,
+	[8] = 11,
+	[12] = 25,
+	[13] = nil,
+	[14] = 10,
+	[16] = 8,
+	[15] = 10,
+	[18] = 19,
+	[19] = nil,
+	[21] = nil,
+	[23] = nil,
+	[24] = nil,
+	[26] = nil,
+	[27] = nil,
+
+
+}
+
+-- add the dialogue of the corresponding scenarioIndex to a list to show it with the dialogueIndex
+local function initializeScenarioIndex(index)
+	
+	for i, dialogue in pairs(berkleyDialogue) do
+		if dialogue.index == index then
+			table.insert(currentScenarioDialogue, dialogue)
+		end
+	end
+	
+	print(currentScenarioDialogue)
+end
+
+--clear the existing choices in the choiceContainer before adding new ones
+local function clearChoices()
+	for index, choice in pairs(choiceContainer:GetChildren()) do
+		if choice:IsA("TextButton") then
+			choice:Destroy()
+		end
+	end
+end
+
+local connection = nil
+-- show the dialogue one letter at a time
+local function typewrite(text)
+	local stop = false
+	
+	nextButton.Visible = false
+	nextButton.Interactable = false 
+	
+	if connection then
+		connection:Disconnect() 
+		connection = nil
+	end
+	
+	connection = userInputService.InputEnded:Connect(function(input, gpe)
+		if gpe then return end
+		if input.KeyCode == Enum.KeyCode.Space then
+			speechContainer.DialogueText.Text = text
+			stop = true
+		end
+	end)	
+	
+	for i = 0, string.len(text), 1 do
+		if stop then
+			connection:Disconnect()
+			connection = nil
+			break
+		end
+		speechContainer.DialogueText.Text = string.sub(text, 1, i)
+		script.Parent.SFX.Click:Play()
+		task.wait(0.02)
+	end	
+	
+	
+	
+end
+
+
+-- if hasChoice is true, then populate the choiceContainer
+local function initializeChoice(index)
+	clearChoices()	
+	for i, choice in pairs(berkleyChoices) do
+		-- if the choice in the choices list is the right current index
+		if choice.index == index then
+			local newChoice = Instance.new("TextButton")
+			newChoice.BackgroundTransparency = 0.5
+			newChoice.BackgroundColor3 = Color3.fromRGB(100, 102, 136)
+			newChoice.TextColor3 = Color3.fromRGB(186, 194, 220)
+			newChoice.Size = UDim2.new(0.3,0,1,0)
+			newChoice.Font = Enum.Font.Roboto
+			newChoice.TextSize = 25
+			newChoice.BorderSizePixel = 0
+			newChoice.Parent = choiceContainer
+			newChoice.Text = choice.text
+			
+			newChoice.MouseButton1Click:Connect(function()
+				-- if the choice is picked, the dialogue will change to its corresponding choice's index
+
+				scenarioIndex = choice.changeIndex
+				currentScenarioDialogue = {}
+				initializeScenarioIndex(scenarioIndex)
+				clearChoices()	
+
+				dialogueIndex = 1
+				annoyance.Value += choice.annoyanceChange
+				
+				local currentDialogue = currentScenarioDialogue[dialogueIndex]
+				dialogueEvent:FireServer(currentDialogue.speaker, "none")
+				choicePickedEvent:FireServer(choice.annoyanceChange)
+				speechContainer.NameText.Text = currentDialogue.speaker
+				
+				if choice.index == 1 then
+					script.Parent.Tutorial.Next:FireServer("ChoicePicked")
+				end
+				
+				typewrite(currentDialogue.text)
+
+				if currentDialogue.hasChoice == true then
+					initializeChoice(dialogueIndex)
+					nextButton.Interactable = false
+					nextButton.Visible = false
+				else
+					nextButton.Interactable = true
+					nextButton.Visible = true
+				end
+			
+				
+			end)
+	
+		end
+	end
+end
+
+
+local function initializeDialogue(index)
+	-- get the current dialogue from the currentlist with the current dialogueIndex
+	local currentDialogue = currentScenarioDialogue[index]
+	
+	if currentDialogue then
+			speechContainer.NameText.Text = currentDialogue.speaker
+	--fire server to change the viewport GUI
+
+	if currentDialogue["giveNotebook"] then
+		dialogueEvent:FireServer(currentDialogue.speaker, "action")
+		if hasNoteBook == false then
+			tweenNotebookIntro:Play()
+		end
+		hasNoteBook = true
+		
+	else
+		dialogueEvent:FireServer(currentDialogue.speaker, "none")
+
+	end
+	
+	typewrite(currentDialogue.text)
+	
+
+	if currentDialogue.hasChoice == true then
+		initializeChoice(currentDialogue.index)
+		
+		nextButton.Interactable = false
+		nextButton.Visible = false
+	else
+		nextButton.Interactable = true
+		nextButton.Visible = true
+	end
+	end
+
+	
+end
+
+-- iterate through the currentScenarioDialogue list by adding to dialogue index
+nextButton.MouseButton1Click:Connect(function()
+	dialogueIndex+=1
+
+	if dialogueIndex > #currentScenarioDialogue then
+		
+		if transitionMap[scenarioIndex] ~= nil then
+			-- if current scenario dialogue list is done with, transition to the next index
+			scenarioIndex = transitionMap[scenarioIndex]
+			dialogueIndex = 1
+			currentScenarioDialogue = {}
+			-- add the new dialogue into the current list
+			initializeScenarioIndex(scenarioIndex)
+			
+			
+		else
+			if annoyance.Value >= speechContainer.AnnoyanceContainer.Max.Value and debounce then
+				debounce = false
+				dialogueIndex = 1
+				currentScenarioDialogue = {}
+				initializeScenarioIndex(20)
+			else
+				print("text over")
+				speechContainerTween:Play()
+				task.wait(1.55)
+				 
+				speechContainer.Parent.Events.Stop:FireServer()
+				speechContainer.Parent.Stop.Visible = false
+				speechContainer.Parent.ConfirmationContainer.Visible = false
+				game.Players.LocalPlayer.PlayerGui.MenuGui.Enabled = true	
+				speechContainer.Visible = false
+				
+			end
+		
+		end
+	end	
+
+	if annoyance.Value >= speechContainer.AnnoyanceContainer.Max.Value and debounce then
+		debounce = false
+		dialogueIndex = 1
+		currentScenarioDialogue = {}
+		initializeScenarioIndex(20)
+	end
+	
+	initializeDialogue(dialogueIndex)
+
+	
+end)
+--defines what happens when the play button in the menu gui is clicked
+game.Players.LocalPlayer.PlayerGui.MenuGui.PlayButton.MouseButton1Click:Connect(function()
+	for i, char in (speechContainer.CustomerView.WorldModel:GetChildren()) do
+		char:Destroy()
+	end
+	local customer = game.ReplicatedStorage:WaitForChild("Berkley"):Clone()
+	customer.Parent = speechContainer.CustomerView.WorldModel
+	annoyance.Value = 0
+	debounce = true
+	dialogueIndex = 1
+	scenarioIndex = 1
+	speechContainer.DialogueText.Text = ""
+	currentScenarioDialogue = {}
+	clearChoices()
+	initializeScenarioIndex(scenarioIndex)
+	initializeDialogue(dialogueIndex)
+	
+	script.Parent.Tutorial.StartTutorial:FireServer()
+	
+end)
