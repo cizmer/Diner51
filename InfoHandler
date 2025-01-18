@@ -33,13 +33,13 @@ local infoDialogueBox = {
 	},
 	{
 		title = "Choices",
-		text = "Certain dialogues will prompt choices (instead of the next button) for the user to change the story. The dialogue only continues when the choice is picked.",
-		image = "rbxassetid://87563476113311"
+		text = "Certain dialogues will prompt choices (instead of the next button) for the user to change the story. Put the choice's number in the white textbox.",
+		image = "rbxassetid://111444568621560"
 	},
 	{
 		title = "Annoyance Bar",
 		text = "Certain choices the user makes will annoy the character they are talking to. If raised to the max, the game will end.",
-		image = "rbxassetid://111271433967183"
+		image = "rbxassetid://118973763899185"
 
 	},
 	{
@@ -57,14 +57,14 @@ local infoDialogueBox = {
 local infoObjective = {
 	{
 		title = "Interact",
-		text = "Interact with various customers throughout the various days",
+		text = "Talk with customers throughout the day and learn more about the mysteries surrounding the town and the rumors surrounding what is happening at the base nearby where your father works.",
 		image = "rbxassetid://102680229043258"
 
 	},
 	{
 		title = "Appease",
 		text = "Refrain from annoying customers, if their annoyance bars reaches to the top, then the customer will leave",
-		image = "rbxassetid://102680229043258"
+		image = "rbxassetid://118973763899185"
 	},
 }
 
