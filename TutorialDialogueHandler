@@ -34,7 +34,7 @@ local berkleyDialogue = {
 		hasChoice = true,
 		text = "Howdy there, kiddo. You must be Wilkins' kid correct? You look just like him. ",
 		speaker = "Berkley"
-		
+
 	},	
 	{ 
 		index = 2,
@@ -130,13 +130,6 @@ local berkleyDialogue = {
 	{ 
 		index = 8,
 		hasChoice = false,
-		text = "Thats good to know, kiddo..",
-		speaker = "Berkley",
-
-	},
-	{ 
-		index = 8,
-		hasChoice = false,
 		text = "Well I'll cut to the chase, your father asked me to bring you this",
 		speaker = "Berkley",
 		giveNotebook = true
@@ -147,7 +140,7 @@ local berkleyDialogue = {
 		hasChoice = false,
 		text = "Now I aint' quite sure how much you know how things are around here but-",
 		speaker = "Berkley",
-	
+
 
 	},
 	{ 
@@ -184,6 +177,13 @@ local berkleyDialogue = {
 		hasChoice = true,
 		text = "Guess he forgot to mention you came with a warnin label.",
 		speaker = "Berkley"
+
+	},
+	{ 
+		index = 17,
+		hasChoice = false,
+		text = "Thats good to know, kiddo..",
+		speaker = "Berkley",
 
 	},
 	{ 
@@ -226,7 +226,7 @@ local berkleyDialogue = {
 	{
 		index = 18, 
 		hasChoice = false,
-		text = "Kid.. what do you take me for? I ain't one to open other peoples stuff. How about you read it yourself and figure it out.",
+		text = "Kid.. what do you take me for? It isn't for me. How about you read it yourself and figure it out.",
 		speaker = "Berkley",
 	},
 	{
@@ -300,14 +300,14 @@ local berkleyDialogue = {
 	{ 
 		index = 21,
 		hasChoice = false,
-		text = "Thank you sir.",
+		text = "Thank you for the notebook sir.",
 		speaker = "You"
 
 	},
 	{ 
 		index = 21,
 		hasChoice = false,
-		text = "No problem kid, I got to get back to duty now, let me know if you need anything.",
+		text = "No problem kiddo, I got to get back to duty now, however let me know if you need anything.",
 		speaker = "Berkley"
 
 	},
@@ -364,10 +364,10 @@ local berkleyDialogue = {
 
 	},
 	{
-			index = 25,
-			hasChoice = true,
-			text = "I'd assume from your colorful attitude you ain't got a clue.",
-			speaker = "Berkley",
+		index = 25,
+		hasChoice = true,
+		text = "I'd assume from your colorful attitude you ain't got a clue.",
+		speaker = "Berkley",
 	},
 
 	{ 
@@ -381,7 +381,7 @@ local berkleyDialogue = {
 	{ 
 		index = 27,
 		hasChoice = false,
-		text = "Why don't ya take a real hard look at it first, before asking questions you know I don't know.I've done my job here, now you go do yours. I'm headin out.",
+		text = "Why don't ya take a real hard look at it first, before asking questions you know I don't know. I've done my job here, now you go do yours. I'm headin out.",
 		speaker = "Berkley",
 
 
@@ -395,7 +395,7 @@ local berkleyDialogue = {
 
 	},
 
-	
+
 }
 
 --choices that will be populated if hasChoice is true
@@ -425,7 +425,7 @@ local berkleyChoices = {
 		annoyanceChange = 0,
 		text = "Doing just fine.",
 	},
-	
+
 	{
 		index = 4,
 		changeIndex = 6,
@@ -438,7 +438,7 @@ local berkleyChoices = {
 		annoyanceChange = 0,
 		text = "Not well.",
 	},
-	
+
 	{
 		index = 7,
 		changeIndex = 16,
@@ -494,7 +494,7 @@ local berkleyChoices = {
 		annoyanceChange = 4,
 		text = "Dismissive*",
 	},
-	
+
 	{
 		index = 11,
 		changeIndex = 23, 
@@ -540,7 +540,7 @@ local transitionMap = {
 	[5] = 8,
 	[3] = 4,
 	[6] = 8,
-	[8] = 11,
+	[17] = 8,
 	[12] = 25,
 	[13] = nil,
 	[14] = 10,
@@ -554,18 +554,17 @@ local transitionMap = {
 	[26] = nil,
 	[27] = nil,
 
-
 }
 
 -- add the dialogue of the corresponding scenarioIndex to a list to show it with the dialogueIndex
 local function initializeScenarioIndex(index)
-	
+
 	for i, dialogue in pairs(berkleyDialogue) do
 		if dialogue.index == index then
 			table.insert(currentScenarioDialogue, dialogue)
 		end
 	end
-	
+
 	print(currentScenarioDialogue)
 end
 
@@ -582,15 +581,15 @@ local connection = nil
 -- show the dialogue one letter at a time
 local function typewrite(text)
 	local stop = false
-	
+
 	nextButton.Visible = false
 	nextButton.Interactable = false 
-	
+
 	if connection then
 		connection:Disconnect() 
 		connection = nil
 	end
-	
+
 	connection = userInputService.InputEnded:Connect(function(input, gpe)
 		if gpe then return end
 		if input.KeyCode == Enum.KeyCode.Space then
@@ -598,7 +597,7 @@ local function typewrite(text)
 			stop = true
 		end
 	end)	
-	
+
 	for i = 0, string.len(text), 1 do
 		if stop then
 			connection:Disconnect()
@@ -609,15 +608,25 @@ local function typewrite(text)
 		script.Parent.SFX.Click:Play()
 		task.wait(0.02)
 	end	
-	
-	
-	
+
+
+
 end
 
+local function removeSpace(str)
+	--substitute space for nothing
+	return str:gsub(" ", "")
+end
 
+local choiceInputConnection
 -- if hasChoice is true, then populate the choiceContainer
 local function initializeChoice(index)
 	clearChoices()	
+	if choiceInputConnection then
+		choiceInputConnection:Disconnect()
+		choiceInputConnection = nil
+	end
+
 	for i, choice in pairs(berkleyChoices) do
 		-- if the choice in the choices list is the right current index
 		if choice.index == index then
@@ -625,48 +634,66 @@ local function initializeChoice(index)
 			newChoice.BackgroundTransparency = 0.5
 			newChoice.BackgroundColor3 = Color3.fromRGB(100, 102, 136)
 			newChoice.TextColor3 = Color3.fromRGB(186, 194, 220)
-			newChoice.Size = UDim2.new(0.3,0,1,0)
+			newChoice.Size = UDim2.new(0.295,0,1,0)
 			newChoice.Font = Enum.Font.Roboto
 			newChoice.TextSize = 25
 			newChoice.BorderSizePixel = 0
 			newChoice.Parent = choiceContainer
-			newChoice.Text = choice.text
+			newChoice.Text =  i .. ". " .. choice.text
+			newChoice.Interactable = false
 			
-			newChoice.MouseButton1Click:Connect(function()
+			choiceInputConnection = userInputService.InputEnded:Connect(function(input, gpe)
 				-- if the choice is picked, the dialogue will change to its corresponding choice's index
-
-				scenarioIndex = choice.changeIndex
-				currentScenarioDialogue = {}
-				initializeScenarioIndex(scenarioIndex)
-				clearChoices()	
-
-				dialogueIndex = 1
-				annoyance.Value += choice.annoyanceChange
+				if gpe then return end
 				
-				local currentDialogue = currentScenarioDialogue[dialogueIndex]
-				dialogueEvent:FireServer(currentDialogue.speaker, "none")
-				choicePickedEvent:FireServer(choice.annoyanceChange)
-				speechContainer.NameText.Text = currentDialogue.speaker
-				
-				if choice.index == 1 then
-					script.Parent.Tutorial.Next:FireServer("ChoicePicked")
+				if input.KeyCode == Enum.KeyCode.Return then
+					local input = removeSpace(speechContainer.ChoiceContainer.Keybind.Text)
+					if choiceInputConnection then
+						choiceInputConnection:Disconnect()
+						choiceInputConnection = nil
+					end
+
+					if tonumber(input) ~= nil and berkleyChoices[tonumber(input)].index == scenarioIndex then
+						
+						if tonumber(input) == i then
+
+							scenarioIndex = choice.changeIndex
+							currentScenarioDialogue = {}
+							initializeScenarioIndex(scenarioIndex)
+							clearChoices()	
+							dialogueIndex = 1
+							annoyance.Value += choice.annoyanceChange
+
+							local currentDialogue = currentScenarioDialogue[dialogueIndex]
+							dialogueEvent:FireServer(currentDialogue.speaker, "none")
+							choicePickedEvent:FireServer(choice.annoyanceChange)
+							speechContainer.NameText.Text = currentDialogue.speaker
+
+							if choice.index == 1 then
+								script.Parent.Tutorial.Next:FireServer("ChoicePicked")
+							end
+							
+							speechContainer.ChoiceContainer.Keybind.Text = ""
+							
+							typewrite(currentDialogue.text)
+
+							if currentDialogue.hasChoice == true then
+								initializeChoice(currentDialogue.index)
+								nextButton.Interactable = false
+								nextButton.Visible = false
+							else
+								nextButton.Interactable = true
+								nextButton.Visible = true
+							end
+							
+						end
+
+					end
 				end
-				
-				typewrite(currentDialogue.text)
-
-				if currentDialogue.hasChoice == true then
-					initializeChoice(dialogueIndex)
-					nextButton.Interactable = false
-					nextButton.Visible = false
-				else
-					nextButton.Interactable = true
-					nextButton.Visible = true
-				end
-			
 				
 			end)
-	
 		end
+		
 	end
 end
 
@@ -674,38 +701,38 @@ end
 local function initializeDialogue(index)
 	-- get the current dialogue from the currentlist with the current dialogueIndex
 	local currentDialogue = currentScenarioDialogue[index]
-	
+
 	if currentDialogue then
-			speechContainer.NameText.Text = currentDialogue.speaker
-	--fire server to change the viewport GUI
+		speechContainer.NameText.Text = currentDialogue.speaker
+		--fire server to change the viewport GUI
 
-	if currentDialogue["giveNotebook"] then
-		dialogueEvent:FireServer(currentDialogue.speaker, "action")
-		if hasNoteBook == false then
-			tweenNotebookIntro:Play()
+		if currentDialogue["giveNotebook"] then
+			dialogueEvent:FireServer(currentDialogue.speaker, "action")
+			if hasNoteBook == false then
+				tweenNotebookIntro:Play()
+			end
+			hasNoteBook = true
+
+		else
+			dialogueEvent:FireServer(currentDialogue.speaker, "none")
+
 		end
-		hasNoteBook = true
-		
-	else
-		dialogueEvent:FireServer(currentDialogue.speaker, "none")
 
-	end
-	
-	typewrite(currentDialogue.text)
-	
+		typewrite(currentDialogue.text)
 
-	if currentDialogue.hasChoice == true then
-		initializeChoice(currentDialogue.index)
-		
-		nextButton.Interactable = false
-		nextButton.Visible = false
-	else
-		nextButton.Interactable = true
-		nextButton.Visible = true
-	end
+
+		if currentDialogue.hasChoice == true then
+			initializeChoice(currentDialogue.index)
+
+			nextButton.Interactable = false
+			nextButton.Visible = false
+		else
+			nextButton.Interactable = true
+			nextButton.Visible = true
+		end
 	end
 
-	
+
 end
 
 -- iterate through the currentScenarioDialogue list by adding to dialogue index
@@ -713,7 +740,7 @@ nextButton.MouseButton1Click:Connect(function()
 	dialogueIndex+=1
 
 	if dialogueIndex > #currentScenarioDialogue then
-		
+
 		if transitionMap[scenarioIndex] ~= nil then
 			-- if current scenario dialogue list is done with, transition to the next index
 			scenarioIndex = transitionMap[scenarioIndex]
@@ -721,8 +748,8 @@ nextButton.MouseButton1Click:Connect(function()
 			currentScenarioDialogue = {}
 			-- add the new dialogue into the current list
 			initializeScenarioIndex(scenarioIndex)
-			
-			
+
+
 		else
 			if annoyance.Value >= speechContainer.AnnoyanceContainer.Max.Value and debounce then
 				debounce = false
@@ -733,15 +760,15 @@ nextButton.MouseButton1Click:Connect(function()
 				print("text over")
 				speechContainerTween:Play()
 				task.wait(1.55)
-				 
+
 				speechContainer.Parent.Events.Stop:FireServer()
 				speechContainer.Parent.Stop.Visible = false
 				speechContainer.Parent.ConfirmationContainer.Visible = false
 				game.Players.LocalPlayer.PlayerGui.MenuGui.Enabled = true	
 				speechContainer.Visible = false
-				
+
 			end
-		
+
 		end
 	end	
 
@@ -751,10 +778,10 @@ nextButton.MouseButton1Click:Connect(function()
 		currentScenarioDialogue = {}
 		initializeScenarioIndex(20)
 	end
-	
+
 	initializeDialogue(dialogueIndex)
 
-	
+
 end)
 --defines what happens when the play button in the menu gui is clicked
 game.Players.LocalPlayer.PlayerGui.MenuGui.PlayButton.MouseButton1Click:Connect(function()
@@ -772,7 +799,7 @@ game.Players.LocalPlayer.PlayerGui.MenuGui.PlayButton.MouseButton1Click:Connect(
 	clearChoices()
 	initializeScenarioIndex(scenarioIndex)
 	initializeDialogue(dialogueIndex)
-	
+
 	script.Parent.Tutorial.StartTutorial:FireServer()
-	
+
 end)
