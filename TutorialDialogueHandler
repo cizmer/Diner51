@@ -618,14 +618,22 @@ local function removeSpace(str)
 	return str:gsub(" ", "")
 end
 
+local debounceChoice = true
 local choiceInputConnection
--- if hasChoice is true, then populate the choiceContainer
-local function initializeChoice(index)
-	clearChoices()	
+
+local function clearConnection()
 	if choiceInputConnection then
 		choiceInputConnection:Disconnect()
 		choiceInputConnection = nil
 	end
+end
+
+-- if hasChoice is true, then populate the choiceContainer
+local function initializeChoice(index)
+	speechContainer.ChoiceContainer.Keybind.Visible = true
+
+	clearChoices()	
+	clearConnection()
 
 	for i, choice in pairs(berkleyChoices) do
 		-- if the choice in the choices list is the right current index
@@ -641,59 +649,100 @@ local function initializeChoice(index)
 			newChoice.Parent = choiceContainer
 			newChoice.Text =  i .. ". " .. choice.text
 			newChoice.Interactable = false
-			
+
 			choiceInputConnection = userInputService.InputEnded:Connect(function(input, gpe)
 				-- if the choice is picked, the dialogue will change to its corresponding choice's index
 				if gpe then return end
 				
-				if input.KeyCode == Enum.KeyCode.Return then
+				if input.KeyCode == Enum.KeyCode.Return and debounce then
+					debounce = false
 					local input = removeSpace(speechContainer.ChoiceContainer.Keybind.Text)
-					if choiceInputConnection then
-						choiceInputConnection:Disconnect()
-						choiceInputConnection = nil
+					
+
+					if berkleyChoices[tonumber(input)] == nil then
+						print("condition 1")
+						debounce = true
+
+						speechContainer.InvalidTExt.Visible = true
+						wait(2)
+						speechContainer.InvalidTExt.Visible = false
+						clearConnection()
+						return
 					end
 
-					if tonumber(input) ~= nil and berkleyChoices[tonumber(input)].index == scenarioIndex then
-						
-						if tonumber(input) == i then
+					if tonumber(input) == nil then
+						print("condition 2")
+						debounce = true
+						debounce = true
 
-							scenarioIndex = choice.changeIndex
-							currentScenarioDialogue = {}
-							initializeScenarioIndex(scenarioIndex)
-							clearChoices()	
-							dialogueIndex = 1
-							annoyance.Value += choice.annoyanceChange
+						speechContainer.InvalidTExt.Visible = true
+						wait(2)
+						speechContainer.InvalidTExt.Visible = false
+						clearConnection()
+						return
+					end
 
-							local currentDialogue = currentScenarioDialogue[dialogueIndex]
-							dialogueEvent:FireServer(currentDialogue.speaker, "none")
-							choicePickedEvent:FireServer(choice.annoyanceChange)
-							speechContainer.NameText.Text = currentDialogue.speaker
+					if berkleyChoices[tonumber(input)].index ~= scenarioIndex then
+						print("condition 3: berkleyChoices[tonumber(input)].index ~= scenarioIndex")
+						debounce = true
 
-							if choice.index == 1 then
-								script.Parent.Tutorial.Next:FireServer("ChoicePicked")
-							end
-							
-							speechContainer.ChoiceContainer.Keybind.Text = ""
-							
-							typewrite(currentDialogue.text)
+						speechContainer.InvalidTExt.Visible = true
+						wait(2)
+						speechContainer.InvalidTExt.Visible = false
+						clearConnection()
+						return
+					end
 
-							if currentDialogue.hasChoice == true then
-								initializeChoice(currentDialogue.index)
-								nextButton.Interactable = false
-								nextButton.Visible = false
-							else
-								nextButton.Interactable = true
-								nextButton.Visible = true
-							end
-							
-						end
+					if tonumber(input) ~= i then
+						print("condition 4")
+						debounce = true
+
+						speechContainer.InvalidTExt.Visible = true
+						wait(2)
+						speechContainer.InvalidTExt.Visible = false
+						clearConnection()
+						return
+					end
+
+					speechContainer.InvalidTExt.Visible = false
+
+					scenarioIndex = choice.changeIndex
+					currentScenarioDialogue = {}
+					initializeScenarioIndex(scenarioIndex)
+					clearChoices()	
+					dialogueIndex = 1
+					annoyance.Value += choice.annoyanceChange
+
+					local currentDialogue = currentScenarioDialogue[dialogueIndex]
+					dialogueEvent:FireServer(currentDialogue.speaker, "none")
+					choicePickedEvent:FireServer(choice.annoyanceChange)
+					speechContainer.NameText.Text = currentDialogue.speaker
+
+					if choice.index == 1 then
+						script.Parent.Tutorial.Next:FireServer("ChoicePicked")
+					end
+
+					speechContainer.ChoiceContainer.Keybind.Text = ""
+
+					typewrite(currentDialogue.text)
+
+					if currentDialogue.hasChoice == true then
+						initializeChoice(currentDialogue.index)
+						nextButton.Interactable = false
+						nextButton.Visible = false
+					else
+						nextButton.Interactable = true
+						nextButton.Visible = true
+						speechContainer.ChoiceContainer.Keybind.Visible = false
 
 					end
+					debounce = true
+					clearConnection()
 				end
-				
+
 			end)
 		end
-		
+
 	end
 end
 
@@ -729,6 +778,8 @@ local function initializeDialogue(index)
 		else
 			nextButton.Interactable = true
 			nextButton.Visible = true
+			speechContainer.ChoiceContainer.Keybind.Visible = false
+
 		end
 	end
 
